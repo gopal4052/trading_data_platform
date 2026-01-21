@@ -1,6 +1,7 @@
 import yfinance as yf
 import pandas as pd
-from datetime import datetime
+from datetime import datetime,timezone
+import os
 
 def fetch_stock_data(symbol):
     """
@@ -9,7 +10,7 @@ def fetch_stock_data(symbol):
     stock = yf.Ticker(symbol)
     df = stock.history(period="5d")
     df["symbol"] = symbol
-    df["ingestion_time"] = datetime.utcnow()
+    df["ingestion_time"] = datetime.now(timezone.utc)
     return df
 
 
@@ -19,4 +20,8 @@ if __name__ == "__main__":
     for symbol in symbols:
         data = fetch_stock_data(symbol)
         print(f"\nData for {symbol}:")
-        print(data.head())
+        ingestion_date = datetime.now(timezone.utc).date().isoformat()
+        bronze_path = f"/Users/gopalsharma/trading_data_platform/data/bronze/market_data/ingestion_date={ingestion_date}"
+        os.makedirs(bronze_path, exist_ok=True)
+        data.to_csv(f"{bronze_path}/{symbol}.csv")
+        print("CSV file saved")
